@@ -1,0 +1,7 @@
+#Dependencies
+/nodes_modules
+nodes_modules/
+.pnp.js
+
+#misc
+config.env
