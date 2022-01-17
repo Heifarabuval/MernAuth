@@ -2,11 +2,15 @@ const Post=  require('../models/Post')
 const Comment=  require('../models/Comment')
 const ErrorResponse = require("../utils/errorResponse");
 const {ObjectId} = require("bson");
+const {DOMPurify} = require ('dompurify');
+
 
 /*Get all my posts*/
 exports.readMyPosts= (req,res,next)=>{
     let userId= req.user._id
-    Post.find({userId:userId}, async function(err, post) {
+    const clean = DOMPurify.sanitize(userId);
+
+    Post.find({userId:clean}, async function(err, post) {
         if (!err) {
             if (!post){
                 return next(new ErrorResponse("Il n'y a aucun post"),400)
@@ -25,7 +29,9 @@ exports.readMyPosts= (req,res,next)=>{
 /*Get one of my posts by id*/
 exports.readMyPost= (req,res,next)=>{
 let id=ObjectId.createFromHexString(req.params.post)
-    Post.find({_id:id}, async function(err, post) {
+    const clean = DOMPurify.sanitize(id);
+
+    Post.find({_id:clean}, async function(err, post) {
         if (!err) {
             if (!post){
                 return next(new ErrorResponse("Le post n'existe pas"),400)
@@ -47,7 +53,9 @@ exports.createComment= async (req,res,next)=>{
         const{content,postId}=req.body;
 
 let comment= new Comment({content:content,'userId':req.user._id,createdAt:Date.now()})
-        let  post  = await Post.updateOne({_id: ObjectId(postId)},{
+        const clean = DOMPurify.sanitize(postId);
+
+        let  post  = await Post.updateOne({_id: ObjectId(clean)},{
             $push:{
                 "comments":{
                    comment
@@ -71,7 +79,8 @@ let comment= new Comment({content:content,'userId':req.user._id,createdAt:Date.n
 exports.updatePost= async (req,res,next)=>{
     try{
         const{title,content,id}=req.body;
-        let  post  = await Post.updateOne({_id:id},{
+        const clean = DOMPurify.sanitize(id);
+        let  post  = await Post.updateOne({_id:clean},{
             $set:{
                 title:title,
                 content:content,
@@ -109,7 +118,8 @@ exports.createPost= async (req,res,next)=>{
 exports.deletePost= async (req,res,next)=>{
     try{
       let id = req.body.id
-        Post.findOneAndDelete({_id:id},function (err,post){
+        const clean = DOMPurify.sanitize(id);
+        Post.findOneAndDelete({_id:clean},function (err,post){
             if (!post){
                     return next(new ErrorResponse("Le post n'existe pas"),400)
             }

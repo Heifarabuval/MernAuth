@@ -2,6 +2,7 @@ const ErrorResponse = require ('../utils/errorResponse')
 const User=  require('../models/User')
 const sendEmail= require('../utils/sendEmail')
 const crypto = require('crypto')
+const {DOMPurify} = require("dompurify");
 
 /*Register Post*/
 exports.register= async (req,res,next)=>{
@@ -24,7 +25,9 @@ exports.login= async (req,res,next)=>{
     }
 
     try{
-        const user = await User.findOne({login:login}).select("+password");
+        const clean = DOMPurify.sanitize(login);
+
+        const user = await User.findOne({"login":clean}).select("+password");
 
         if (!user){
             return next(new ErrorResponse("Identifiants invalides"),401)
@@ -47,8 +50,9 @@ exports.login= async (req,res,next)=>{
 exports.forgotPassword= async (req,res,next)=>{
     const {email}=req.body;
     try {
+        const clean = DOMPurify.sanitize(email);
 
-        const user = await User.findOne({email})
+        const user = await User.findOne({"email":clean})
         if (!user){
             return next(new ErrorResponse("Impossible d'envoyer le mail",404))
         }
